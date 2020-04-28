@@ -20,6 +20,7 @@ namespace MovieScoring.Domain.ScoreCalculator
 
         public int calculate(int movieId)
         {
+            //throw new Exception("aaaa");
             List<Review> movieReviews = ReviewRepository.GetAll().FindAll(review => review.Movie.Id == movieId);
             int reviewCount = movieReviews.Count();
             int scoreSum = movieReviews

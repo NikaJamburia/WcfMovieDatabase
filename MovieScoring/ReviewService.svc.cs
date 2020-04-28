@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Transactions;
 
 namespace MovieScoring
 {
@@ -63,14 +64,22 @@ namespace MovieScoring
                 throw new Exception("Movie not set");
             }
 
-            Review reviewModel = review.toModel();
-            reviewModel.Movie = movieRepository.Get(review.Movie.Id);
-            reviewModel.fillDates();
+            using(TransactionScope scope = new TransactionScope())
+            {
+                Review reviewModel = review.toModel();
+                reviewModel.Movie = movieRepository.Get(review.Movie.Id);
+                reviewModel.fillDates();
+                Review savedReview = reviewRepository.Save(reviewModel);
 
-            Review savedReview = reviewRepository.Save(reviewModel);
-            scoreCalculator.calculate(review.Movie.Id);
+                scoreCalculator.calculate(review.Movie.Id);
 
-            return ReviewDto.CreateFrom(savedReview);
+                scope.Complete();
+
+                return ReviewDto.CreateFrom(savedReview);
+            }
+
+
+
         }
 
         public ReviewDto updateReview(string id, ReviewDto review)
